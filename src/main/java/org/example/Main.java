@@ -1,37 +1,44 @@
 package org.example;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        String inPath = "lng.txt";
+        String inPath = "test.txt";
         String outPath = "result.txt";
         String pattern = "^(\"[0-9]*\";)*\"[0-9]*\"$";
         String line;
-        HashMap<String, String[]> groups = new HashMap<>();
+        List<Set<String>> groups = new ArrayList<>();
+        Map<Set<String>, List<String>> groupMap = new HashMap<>();
 
         Processor processor = new Processor(pattern);
-        Reader reader = new Reader(inPath);
 
-        while ((line = reader.readLine()) != null) {
-            if (processor.isValid(line)) {
-                String [] elements = new String[countChar(line, ';') + 1];
-                elements = line.split(";");
+        try(BufferedReader reader = new BufferedReader(new FileReader(inPath))){
+            while ((line = reader.readLine()) != null) {
+                if (processor.isValid(line))
+                    groupMap = processor.process(line, groupMap, groups);
             }
+            output(outPath, groupMap);
+        }catch (IOException e){
+            System.out.println(e.getMessage());
         }
-        reader.close();
+
     }
 
-    private static int countChar(String s, char c) {
-        int count = 0;
-        for(int i = 0; i < s.length(); i++) {
-            if(s.charAt(i) == c) count++;
+    private static void output(String path, Map<Set<String>, List<String>> groupMap) throws IOException{
+        BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+        int counter = 1;
+        for (Set<String> group: groupMap.keySet()) {
+            writer.write("Group " + counter);
+            writer.newLine();
+            for (String str : groupMap.get(group)) {
+                writer.write(str);
+                writer.newLine();
+            }
+            counter++;
         }
-        return count;
     }
 }
